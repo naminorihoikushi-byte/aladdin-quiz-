@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>電車旅クイズ</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --orange-50: #fff7ed;
+  --orange-100: #ffedd5;
+  --orange-200: #fed7aa;
+  --orange-300: #fdba74;
+  --orange-400: #fb923c;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+  --terra: #c2704e;
+  --terra-dark: #a0583b;
+  --terra-light: #e8a889;
+  --green: #22c55e;
+  --green-bg: #dcfce7;
+  --green-border: #86efac;
+  --red: #ef4444;
+  --red-bg: #fee2e2;
+  --red-border: #fca5a5;
+  --text: #3c2415;
+  --text-light: #78583e;
+  --bg: #fffaf5;
+  --card-shadow: 0 4px 24px rgba(194, 112, 78, 0.15);
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  height: 100dvh;
+  padding: 24px;
+  animation: fadeIn 0.4s ease;
+}
+.screen.active { display: flex; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Start Screen ── */
+#start-screen {
+  background: linear-gradient(160deg, var(--orange-100) 0%, var(--bg) 50%, var(--orange-50) 100%);
+  gap: 24px;
+  text-align: center;
+}
+
+#start-screen h1 {
+  font-size: 2.4rem;
+  color: var(--terra-dark);
+  letter-spacing: 0.04em;
+}
+
+#start-screen .subtitle {
+  font-size: 1.15rem;
+  color: var(--text-light);
+  line-height: 1.7;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 48px;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.96); }
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--orange-500), var(--terra));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+}
+
+.btn-outline {
+  background: #fff;
+  color: var(--terra);
+  border: 2.5px solid var(--terra-light);
+  box-shadow: var(--card-shadow);
+}
+
+.btn-map {
+  background: #fff;
+  color: #1a73e8;
+  border: 2px solid #a8c7fa;
+  font-size: 1.1rem;
+  padding: 12px 28px;
+  border-radius: 12px;
+  text-decoration: none;
+  margin-top: 4px;
+}
+
+/* ── Quiz Screen ── */
+#quiz-screen {
+  justify-content: flex-start;
+  padding: 20px 24px;
+  gap: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.progress-bar {
+  width: 100%;
+  max-width: 640px;
+  height: 10px;
+  background: var(--orange-100);
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--orange-400), var(--terra));
+  border-radius: 5px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.quiz-card {
+  width: 100%;
+  max-width: 640px;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: var(--card-shadow);
+  padding: 28px 24px 24px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.quiz-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  align-self: flex-start;
+}
+.cat-window { background: #e0f2fe; color: #0369a1; }
+.cat-station { background: #fef3c7; color: #b45309; }
+.cat-trivia { background: #f3e8ff; color: #7c3aed; }
+.cat-aladdin { background: #fce7f3; color: #be185d; }
+
+.quiz-svg {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.quiz-svg svg {
+  width: 180px;
+  height: 120px;
+}
+
+.quiz-question {
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.choice-btn {
+  padding: 16px 12px;
+  border: 2.5px solid var(--orange-200);
+  border-radius: 16px;
+  background: var(--orange-50);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  text-align: center;
+  line-height: 1.4;
+}
+.choice-btn:active { transform: scale(0.97); }
+.choice-btn.selected {
+  border-color: var(--orange-500);
+  background: var(--orange-100);
+}
+.choice-btn.correct {
+  border-color: var(--green);
+  background: var(--green-bg);
+  animation: popCorrect 0.4s ease;
+}
+.choice-btn.wrong {
+  border-color: var(--red);
+  background: var(--red-bg);
+  animation: shake 0.4s ease;
+}
+.choice-btn.reveal-correct {
+  border-color: var(--green);
+  background: var(--green-bg);
+}
+.choice-btn.disabled {
+  pointer-events: none;
+  opacity: 0.7;
+}
+.choice-btn.disabled.correct,
+.choice-btn.disabled.reveal-correct { opacity: 1; }
+
+@keyframes popCorrect {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.explanation {
+  display: none;
+  background: var(--orange-50);
+  border: 2px solid var(--orange-200);
+  border-radius: 16px;
+  padding: 18px 16px;
+  font-size: 1.1rem;
+  line-height: 1.65;
+  color: var(--text);
+  animation: fadeIn 0.35s ease;
+}
+.explanation.show { display: block; }
+
+.explanation .result-label {
+  font-weight: 800;
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+.explanation .result-label.correct-label { color: var(--green); }
+.explanation .result-label.wrong-label { color: var(--red); }
+
+.next-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ── Result Screen ── */
+#result-screen {
+  background: linear-gradient(160deg, var(--orange-50) 0%, #fff 50%, var(--orange-100) 100%);
+  gap: 20px;
+  text-align: center;
+}
+
+.result-score {
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--terra-dark);
+}
+.result-score span { font-size: 1.8rem; }
+
+.result-msg {
+  font-size: 1.3rem;
+  color: var(--text-light);
+  line-height: 1.6;
+}
+
+.result-detail {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+.result-dot {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #fff;
+}
+.result-dot.ok { background: var(--green); }
+.result-dot.ng { background: var(--red); }
+
+/* ── Overlay flash ── */
+.flash-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+}
+.flash-overlay.flash-green {
+  background: radial-gradient(circle, rgba(34,197,94,0.25) 0%, transparent 70%);
+  animation: flash 0.6s ease;
+}
+.flash-overlay.flash-red {
+  background: radial-gradient(circle, rgba(239,68,68,0.2) 0%, transparent 70%);
+  animation: flash 0.6s ease;
+}
+@keyframes flash {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Confetti ── */
+.confetti-piece {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  z-index: 200;
+  pointer-events: none;
+  animation: confettiFall 1.2s ease forwards;
+}
+@keyframes confettiFall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(80vh) rotate(720deg); opacity: 0; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .choices { grid-template-columns: 1fr; }
+  .quiz-question { font-size: 1.2rem; }
+  #start-screen h1 { font-size: 1.9rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="flash" class="flash-overlay"></div>
+
+<!-- ═══ Start Screen ═══ -->
+<div id="start-screen" class="screen active">
+  <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+    <rect x="25" y="38" width="70" height="44" rx="10" fill="#ea580c"/>
+    <rect x="30" y="44" width="24" height="16" rx="4" fill="#bae6fd"/>
+    <rect x="66" y="44" width="24" height="16" rx="4" fill="#bae6fd"/>
+    <rect x="35" y="68" width="10" height="8" rx="4" fill="#78583e"/>
+    <rect x="75" y="68" width="10" height="8" rx="4" fill="#78583e"/>
+    <line x1="10" y1="80" x2="110" y2="80" stroke="#a0583b" stroke-width="3" stroke-linecap="round"/>
+    <line x1="5" y1="84" x2="115" y2="84" stroke="#c2704e" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 4"/>
+    <circle cx="60" cy="30" r="8" fill="#fbbf24"/>
+    <text x="60" y="34" text-anchor="middle" font-size="11" font-weight="bold" fill="#78583e">?</text>
+  </svg>
+  <h1>電車旅クイズ</h1>
+  <p class="subtitle">多摩境 → 新宿 → 汐留<br>全8問のクイズに挑戦しよう！</p>
+  <button class="btn btn-primary" onclick="startQuiz()">スタート！</button>
+</div>
+
+<!-- ═══ Quiz Screen ═══ -->
+<div id="quiz-screen" class="screen">
+  <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+  <div id="progress-text" class="progress-text"></div>
+  <div class="quiz-card">
+    <div id="quiz-cat" class="quiz-category"></div>
+    <div id="quiz-svg" class="quiz-svg"></div>
+    <div id="quiz-question" class="quiz-question"></div>
+    <div id="choices" class="choices"></div>
+    <div id="explanation" class="explanation"></div>
+    <div id="next-area" class="next-area" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ═══ Result Screen ═══ -->
+<div id="result-screen" class="screen">
+  <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+    <circle cx="50" cy="50" r="44" fill="#fef3c7" stroke="#fbbf24" stroke-width="4"/>
+    <text x="50" y="58" text-anchor="middle" font-size="40">🏆</text>
+  </svg>
+  <div id="result-score" class="result-score"></div>
+  <div id="result-msg" class="result-msg"></div>
+  <div id="result-detail" class="result-detail"></div>
+  <button class="btn btn-primary" onclick="startQuiz()">もう一度チャレンジ！</button>
+</div>
+
+<script>
+// ── Quiz data ──
+const quizzes = [
+  {
+    cat: 'window', catLabel: '車窓',
+    q: '多摩境を出てすぐ見える広大な自然公園は？',
+    choices: ['小山内裏公園', '昭和記念公園', '多摩中央公園', '片倉城跡公園'],
+    answer: 0,
+    explain: '多摩丘陵に広がる雑木林と内裏池が有名。春は桜、秋は紅葉が絶景！',
+    mapUrl: 'https://maps.google.com/?q=小山内裏公園'
+  },
+  {
+    cat: 'station', catLabel: '駅・乗換',
+    q: '多摩境から新宿に行くとき最初に乗換える駅は？',
+    choices: ['橋本', '調布', '府中', '分倍河原'],
+    answer: 1,
+    explain: '調布駅で京王相模原線から京王線に乗換え。ホームが変わるので注意！',
+    mapUrl: 'https://maps.google.com/?q=調布駅'
+  },
+  {
+    cat: 'trivia', catLabel: '豆知識',
+    q: '新宿駅の1日の乗降客数は世界一！その人数は？',
+    choices: ['約50万人', '約100万人', '約200万人', '約350万人'],
+    answer: 2,
+    explain: '約200万人！東京ドーム満員（55,000人）の約36倍。世界一のターミナル駅だよ！',
+    mapUrl: 'https://maps.google.com/?q=新宿駅'
+  },
+  {
+    cat: 'aladdin', catLabel: 'アラジン予習',
+    q: 'アラジンが魔法のランプを見つけた場所はどこ？',
+    choices: ['砂漠のオアシス', '海の底', '魔法の洞窟', '王様の宮殿'],
+    answer: 2,
+    explain: '魔法使いに連れて行かれた不思議な洞窟の中！ランプをこするとジーニーが現れるよ！',
+    mapUrl: null
+  },
+  {
+    cat: 'window', catLabel: '車窓',
+    q: '京王線で新宿に近づくと右手に見える丸い時計塔のビルは？',
+    choices: ['東京都庁', 'NTTドコモ代々木ビル', '新宿パークタワー', 'モード学園コクーンタワー'],
+    answer: 1,
+    explain: '高さ約240mでこのエリア最高峰！あの特徴的な時計塔を電車から探してみて！',
+    mapUrl: 'https://maps.google.com/?q=NTTドコモ代々木ビル'
+  },
+  {
+    cat: 'station', catLabel: '駅・乗換',
+    q: '新宿から汐留に行くとき使う路線は？',
+    choices: ['東京メトロ丸ノ内線', '都営大江戸線', 'JR山手線', 'ゆりかもめ'],
+    answer: 1,
+    explain: '新宿駅から都営大江戸線に乗換え！六本木や築地市場前を通って汐留へ。',
+    mapUrl: 'https://maps.google.com/?q=都営大江戸線新宿駅'
+  },
+  {
+    cat: 'trivia', catLabel: '豆知識',
+    q: '汐留は昔、日本初の鉄道の駅があった場所。その路線はどこからどこまで？',
+    choices: ['東京〜大阪', '新橋〜横浜', '上野〜浅草', '品川〜新宿'],
+    answer: 1,
+    explain: '1872年に新橋〜横浜間で日本初の鉄道が開通！今は劇団四季の劇場が建っているよ。',
+    mapUrl: 'https://maps.google.com/?q=旧新橋停車場'
+  },
+  {
+    cat: 'aladdin', catLabel: 'アラジン予習',
+    q: '劇団四季「アラジン」で魔法のランプから出てくるキャラクターの名前は？',
+    choices: ['アブー', 'ジャスミン', 'ジーニー', 'ジャファー'],
+    answer: 2,
+    explain: 'ジーニーは3つの願いを叶えてくれる魔人！舞台では歌やダンスが大迫力だよ！',
+    mapUrl: null
+  }
+];
+
+const prefixes = ['A.', 'B.', 'C.', 'D.'];
+let current = 0;
+let score = 0;
+let results = [];
+
+// ── SVG illustrations per category ──
+function getSvg(cat) {
+  switch(cat) {
+    case 'window': return `
+      <svg viewBox="0 0 180 120" fill="none">
+        <rect x="10" y="20" width="160" height="80" rx="16" fill="#fed7aa" stroke="#ea580c" stroke-width="3"/>
+        <rect x="22" y="30" width="56" height="42" rx="8" fill="#e0f2fe"/>
+        <rect x="102" y="30" width="56" height="42" rx="8" fill="#e0f2fe"/>
+        <path d="M26 60 Q40 38 54 55 Q62 42 74 60Z" fill="#4ade80"/>
+        <path d="M106 60 Q118 40 130 52 Q142 38 154 60Z" fill="#4ade80"/>
+        <circle cx="45" cy="40" r="5" fill="#fbbf24"/>
+        <circle cx="130" cy="38" r="4" fill="#fbbf24"/>
+        <rect x="80" y="28" width="4" height="50" rx="2" fill="#c2704e"/>
+        <rect x="20" y="78" width="140" height="12" rx="4" fill="#ea580c"/>
+        <circle cx="55" cy="100" r="7" fill="#78583e" stroke="#5a3e28" stroke-width="2"/>
+        <circle cx="125" cy="100" r="7" fill="#78583e" stroke="#5a3e28" stroke-width="2"/>
+      </svg>`;
+    case 'station': return `
+      <svg viewBox="0 0 180 120" fill="none">
+        <rect x="30" y="25" width="120" height="65" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="2.5"/>
+        <rect x="50" y="35" width="30" height="22" rx="4" fill="#bae6fd"/>
+        <rect x="100" y="35" width="30" height="22" rx="4" fill="#bae6fd"/>
+        <rect x="75" y="62" width="30" height="28" rx="3" fill="#a0583b"/>
+        <rect x="82" y="62" width="16" height="28" rx="2" fill="#c2704e"/>
+        <polygon points="25,28 90,5 155,28" fill="#ea580c"/>
+        <circle cx="90" cy="18" r="5" fill="#fbbf24"/>
+        <rect x="10" y="90" width="160" height="6" rx="3" fill="#d1d5db"/>
+        <rect x="10" y="98" width="160" height="4" rx="2" fill="#9ca3af"/>
+        <text x="90" y="84" text-anchor="middle" font-size="10" font-weight="bold" fill="#78583e">駅</text>
+      </svg>`;
+    case 'trivia': return `
+      <svg viewBox="0 0 180 120" fill="none">
+        <circle cx="90" cy="55" r="42" fill="#f3e8ff" stroke="#a78bfa" stroke-width="3"/>
+        <text x="90" y="50" text-anchor="middle" font-size="36" font-weight="900" fill="#7c3aed">？</text>
+        <text x="90" y="75" text-anchor="middle" font-size="12" font-weight="700" fill="#7c3aed">豆知識</text>
+        <circle cx="38" cy="22" r="8" fill="#fde68a"/>
+        <path d="M34 22 L38 18 L42 22 L38 26Z" fill="#fbbf24"/>
+        <circle cx="148" cy="30" r="6" fill="#fde68a"/>
+        <path d="M145 30 L148 27 L151 30 L148 33Z" fill="#fbbf24"/>
+        <circle cx="150" cy="88" r="5" fill="#c4b5fd"/>
+        <circle cx="30" cy="90" r="4" fill="#c4b5fd"/>
+      </svg>`;
+    case 'aladdin': return `
+      <svg viewBox="0 0 180 120" fill="none">
+        <ellipse cx="90" cy="100" rx="50" ry="8" fill="#fde68a" opacity="0.5"/>
+        <path d="M60 90 Q55 70 65 65 L80 60 Q75 50 85 45 L90 42 Q95 45 100 48 L115 65 Q125 70 120 90Z" fill="#f59e0b" stroke="#d97706" stroke-width="2"/>
+        <ellipse cx="90" cy="90" rx="32" ry="5" fill="#d97706"/>
+        <path d="M82 42 Q90 10 98 42" fill="none" stroke="#c084fc" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="90" cy="8" r="5" fill="#c084fc" opacity="0.7"/>
+        <circle cx="82" cy="14" r="3" fill="#e9d5ff" opacity="0.5"/>
+        <circle cx="98" cy="14" r="3" fill="#e9d5ff" opacity="0.5"/>
+        <ellipse cx="90" cy="68" rx="6" ry="8" fill="#fbbf24"/>
+        <path d="M70 95 Q60 80 50 95" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <path d="M130 95 Q120 80 110 95" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+        <circle cx="55" cy="30" r="2" fill="#fbbf24" opacity="0.6"/>
+        <circle cx="130" cy="25" r="2.5" fill="#fbbf24" opacity="0.6"/>
+        <circle cx="145" cy="50" r="1.5" fill="#fbbf24" opacity="0.4"/>
+      </svg>`;
+  }
+}
+
+function catClass(cat) {
+  return { window:'cat-window', station:'cat-station', trivia:'cat-trivia', aladdin:'cat-aladdin' }[cat];
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startQuiz() {
+  current = 0; score = 0; results = [];
+  showScreen('quiz-screen');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = quizzes[current];
+  document.getElementById('progress-fill').style.width = ((current) / quizzes.length * 100) + '%';
+  document.getElementById('progress-text').textContent = `第${current+1}問 / 全${quizzes.length}問`;
+
+  document.getElementById('quiz-cat').className = 'quiz-category ' + catClass(q.cat);
+  document.getElementById('quiz-cat').textContent = q.catLabel;
+  document.getElementById('quiz-svg').innerHTML = getSvg(q.cat);
+  document.getElementById('quiz-question').textContent = q.q;
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  q.choices.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = prefixes[i] + ' ' + c;
+    btn.onclick = () => selectAnswer(i);
+    choicesEl.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('explanation').innerHTML = '';
+  document.getElementById('next-area').style.display = 'none';
+  document.getElementById('next-area').innerHTML = '';
+
+  // Scroll to top
+  document.getElementById('quiz-screen').scrollTop = 0;
+}
+
+function selectAnswer(idx) {
+  const q = quizzes[current];
+  const btns = document.querySelectorAll('.choice-btn');
+  const correct = idx === q.answer;
+  const flash = document.getElementById('flash');
+
+  btns.forEach((b, i) => {
+    b.classList.add('disabled');
+    if (i === q.answer) b.classList.add(correct ? 'correct' : 'reveal-correct');
+    if (i === idx && !correct) b.classList.add('wrong');
+  });
+
+  if (correct) {
+    score++;
+    results.push(true);
+    flash.className = 'flash-overlay flash-green';
+    spawnConfetti();
+  } else {
+    results.push(false);
+    flash.className = 'flash-overlay flash-red';
+  }
+  setTimeout(() => flash.className = 'flash-overlay', 700);
+
+  // Explanation
+  const expEl = document.getElementById('explanation');
+  let html = `<div class="result-label ${correct ? 'correct-label' : 'wrong-label'}">${correct ? '⭕ 正解！' : '❌ 残念…'}</div>`;
+  html += `<p>${q.explain}</p>`;
+  expEl.innerHTML = html;
+  expEl.classList.add('show');
+
+  // Next / Map
+  const nextArea = document.getElementById('next-area');
+  nextArea.style.display = 'flex';
+  let naHtml = '';
+  if (q.mapUrl) {
+    naHtml += `<a class="btn btn-map" href="${q.mapUrl}" target="_blank" rel="noopener">Googleマップで見る ↗</a>`;
+  }
+  if (current < quizzes.length - 1) {
+    naHtml += `<button class="btn btn-primary" onclick="nextQuestion()">次の問題へ →</button>`;
+  } else {
+    naHtml += `<button class="btn btn-primary" onclick="showResult()">結果を見る</button>`;
+  }
+  nextArea.innerHTML = naHtml;
+}
+
+function nextQuestion() {
+  current++;
+  renderQuestion();
+}
+
+function showResult() {
+  document.getElementById('progress-fill').style.width = '100%';
+  showScreen('result-screen');
+
+  document.getElementById('result-score').innerHTML = `${score}<span> / ${quizzes.length}</span>`;
+
+  let msg = '';
+  const pct = score / quizzes.length;
+  if (pct === 1) msg = 'パーフェクト！電車旅マスター！🎉';
+  else if (pct >= 0.75) msg = 'すごい！よく知ってるね！';
+  else if (pct >= 0.5) msg = 'いい感じ！もっと電車旅で学ぼう！';
+  else msg = 'ドンマイ！旅をしながら覚えよう！';
+  document.getElementById('result-msg').textContent = msg;
+
+  const detail = document.getElementById('result-detail');
+  detail.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = 'result-dot ' + (r ? 'ok' : 'ng');
+    d.textContent = 'Q' + (i + 1);
+    detail.appendChild(d);
+  });
+
+  if (pct >= 0.75) spawnConfetti(40);
+}
+
+function spawnConfetti(count = 20) {
+  const colors = ['#f97316','#fbbf24','#4ade80','#60a5fa','#c084fc','#fb7185'];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.top = '-10px';
+    el.style.background = colors[Math.floor(Math.random() * colors.length)];
+    el.style.animationDelay = Math.random() * 0.5 + 's';
+    el.style.animationDuration = (0.8 + Math.random() * 0.8) + 's';
+    el.style.width = (6 + Math.random() * 8) + 'px';
+    el.style.height = (6 + Math.random() * 8) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+}
+</script>
+</body>
+</html>
